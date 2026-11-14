@@ -1,0 +1,8 @@
+build/
+*.bin
+*.hex
+*.uf2
+*.zip
+.vscode/
+Desktop.ini
+Thumbs.db

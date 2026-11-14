@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DogRing 配線ガイド</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one column workbench sheet — two focused diagrams (power, signal), then a checklist */
+:root {
+  --bg: #f4f6f5;
+  --sheet: #ffffff;
+  --fg: #1c2421;
+  --muted: #5d6a65;
+  --line: #d5dcd9;
+  --board: #e9eeec;
+  --pad: #b8901f;
+  --w-red: #d23b32;
+  --w-gnd: #3f4a55;
+  --w-data: #1a9152;
+  --w-ctrl: #d27206;
+  --w-btn: #7a4fd0;
+  --faint: #b9c3bf;
+  --font-body: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Consolas", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131816; --sheet: #1b2220; --fg: #e5ece9; --muted: #9aa8a2; --line: #2f3a36;
+    --board: #24302c; --pad: #e0b94a; --w-red: #ff6a5f; --w-gnd: #aeb9c4; --w-data: #46d38b;
+    --w-ctrl: #ffa53a; --w-btn: #b393ff; --faint: #4a5752; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131816; --sheet: #1b2220; --fg: #e5ece9; --muted: #9aa8a2; --line: #2f3a36;
+  --board: #24302c; --pad: #e0b94a; --w-red: #ff6a5f; --w-gnd: #aeb9c4; --w-data: #46d38b;
+  --w-ctrl: #ffa53a; --w-btn: #b393ff; --faint: #4a5752; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.75; }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 32px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 28px; }
+h1 { font-size: 1.75rem; margin: 0; line-height: 1.3; text-wrap: balance; }
+h2 { font-size: 1.2rem; margin: 0; text-wrap: balance; }
+p { margin: 0; max-width: 65ch; }
+.lede { color: var(--muted); }
+header { display: grid; gap: 8px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 0.9rem; }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend i { display: inline-block; width: 28px; height: 4px; border-radius: 2px; }
+section.sheet { background: var(--sheet); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: grid; gap: 14px; min-width: 0; }
+.step { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); letter-spacing: 0.06em; }
+figure { margin: 0; display: grid; gap: 10px; }
+.scroll { overflow-x: auto; }
+svg { display: block; width: 100%; min-width: 620px; height: auto; }
+figcaption { font-size: 0.9rem; color: var(--muted); max-width: 70ch; }
+
+/* SVG parts (page CSS, themed by tokens) */
+.comp { fill: var(--board); stroke: var(--fg); stroke-width: 1.5; }
+.dash { fill: none; stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 5 4; }
+.padr { fill: var(--pad); }
+.pin { fill: var(--pad); stroke: var(--fg); stroke-width: 1; }
+.pin.off { fill: var(--board); stroke: var(--faint); }
+.t { fill: var(--fg); font-family: var(--font-body); font-size: 13px; }
+.t.s { font-size: 11px; fill: var(--muted); }
+.t.m { font-family: var(--font-mono); font-size: 12px; font-weight: 600; }
+.t.off { fill: var(--faint); font-weight: 500; }
+.t.b { font-weight: 700; font-size: 14px; }
+.w { fill: none; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+.red { stroke: var(--w-red); } .gnd { stroke: var(--w-gnd); } .data { stroke: var(--w-data); }
+.ctrl { stroke: var(--w-ctrl); } .btn { stroke: var(--w-btn); }
+.dot { stroke: none; }
+.dot.red { fill: var(--w-red); } .dot.gnd { fill: var(--w-gnd); }
+.wl { font-family: var(--font-body); font-size: 11px; font-weight: 500; }
+.wl.red { fill: var(--w-red); stroke: none; } .wl.gnd { fill: var(--w-gnd); stroke: none; }
+.wl.data { fill: var(--w-data); stroke: none; } .wl.ctrl { fill: var(--w-ctrl); stroke: none; } .wl.btn { fill: var(--w-btn); stroke: none; }
+.sym { fill: none; stroke: var(--fg); stroke-width: 2; stroke-linecap: round; }
+.res { fill: var(--sheet); stroke: var(--w-data); stroke-width: 2.5; }
+.led { fill: var(--sheet); stroke: var(--muted); stroke-width: 1; }
+.stub { fill: none; stroke: var(--faint); stroke-width: 2; stroke-dasharray: 3 4; }
+
+/* checklist */
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+th { font-size: 0.8rem; color: var(--muted); font-weight: 500; letter-spacing: 0.04em; }
+td.c { width: 36px; }
+td code { font-family: var(--font-mono); font-weight: 600; }
+.chip { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--w-data); }
+input[type="checkbox"]:focus-visible { outline: 2px solid var(--w-ctrl); outline-offset: 2px; }
+tr.done td:not(.c) { color: var(--muted); text-decoration: line-through; }
+.progress { font-family: var(--font-mono); font-size: 0.85rem; color: var(--muted); }
+ul.notes { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; max-width: 70ch; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>DogRing 配線ガイド</h1>
+    <p class="lede">XIAO nRF52840 + D4184 MOSFETモジュール + WS2812B LEDテープ + 3.6V リチウムイオン電池。配線を「電源」と「信号」の2枚に分けて描いています。電線の色はこの図の中だけの目印です。</p>
+    <div class="legend" aria-label="電線の色の意味">
+      <span><i style="background:var(--w-red)"></i>電池+(プラス)</span>
+      <span><i style="background:var(--w-gnd)"></i>GND(マイナス)</span>
+      <span><i style="background:var(--w-data)"></i>LEDデータ</span>
+      <span><i style="background:var(--w-ctrl)"></i>MOSFET制御</span>
+      <span><i style="background:var(--w-btn)"></i>ボタン</span>
+    </div>
+  </header>
+
+  <section class="sheet">
+    <div class="step">図1 / 電源の配線</div>
+    <h2>電池から XIAO と LEDテープへ電気を送る</h2>
+    <figure>
+      <div class="scroll">
+      <svg viewBox="0 0 900 310" role="img" aria-label="電池のプラスはXIAO裏面のBAT+とD4184のVIN+へ。電池のマイナスはXIAO裏面のBAT−とD4184のVIN−へ。D4184のOUT+はLEDテープの+5V、OUT−はLEDテープのGNDへ。LEDテープの+5VとGNDの間に470µFのコンデンサ。">
+        <!-- battery -->
+        <rect class="comp" x="30" y="140" width="150" height="80" rx="10"/>
+        <text class="t b" x="100" y="176" text-anchor="middle">3.6V 電池</text>
+        <text class="t s" x="100" y="196" text-anchor="middle">リチウムイオン</text>
+        <text class="t m" x="166" y="165" text-anchor="end" style="fill:var(--w-red)">+</text>
+        <text class="t m" x="166" y="205" text-anchor="end">−</text>
+
+        <!-- XIAO back pads -->
+        <rect class="dash" x="300" y="34" width="160" height="78" rx="8"/>
+        <text class="t s" x="380" y="54" text-anchor="middle">XIAO nRF52840 の裏面</text>
+        <rect class="padr" x="333" y="86" width="24" height="18" rx="2"/>
+        <rect class="padr" x="403" y="86" width="24" height="18" rx="2"/>
+        <text class="t m" x="345" y="79" text-anchor="middle">BAT+</text>
+        <text class="t m" x="415" y="79" text-anchor="middle">BAT−</text>
+
+        <!-- D4184 -->
+        <rect class="comp" x="480" y="160" width="170" height="120" rx="6"/>
+        <text class="t m" x="492" y="194">VIN+</text>
+        <text class="t m" x="492" y="254">VIN−</text>
+        <text class="t m" x="638" y="194" text-anchor="end">OUT+</text>
+        <text class="t m" x="638" y="254" text-anchor="end">OUT−</text>
+        <text class="t b" x="565" y="220" text-anchor="middle">D4184</text>
+        <text class="t s" x="565" y="236" text-anchor="middle">MOSFETモジュール</text>
+        <circle class="pin off" cx="545" cy="160" r="4"/>
+        <circle class="pin off" cx="585" cy="160" r="4"/>
+        <text class="t s" x="565" y="148" text-anchor="middle">TRIG・GND は図2</text>
+
+        <!-- LED strip -->
+        <rect class="comp" x="760" y="165" width="120" height="110" rx="4"/>
+        <text class="t b" x="820" y="156" text-anchor="middle">LEDテープ</text>
+        <text class="t m" x="772" y="194">+5V</text>
+        <text class="t m off" x="772" y="224">DIN</text>
+        <text class="t m" x="772" y="254">GND</text>
+        <rect class="led" x="836" y="181" width="16" height="16" rx="2"/>
+        <rect class="led" x="836" y="212" width="16" height="16" rx="2"/>
+        <rect class="led" x="836" y="243" width="16" height="16" rx="2"/>
+        <circle class="pin" cx="760" cy="190" r="5"/>
+        <circle class="pin off" cx="760" cy="220" r="5"/>
+        <circle class="pin" cx="760" cy="250" r="5"/>
+
+        <!-- + wires -->
+        <path class="w red" d="M180 160 H240 V130 H345 V104"/>
+        <path class="w red" d="M240 160 V190 H480"/>
+        <circle class="dot red" cx="240" cy="160" r="5"/>
+        <path class="w red" d="M650 190 H760"/>
+        <text class="wl red" x="300" y="124">電池+ → BAT+</text>
+        <text class="wl red" x="300" y="184">電池+ → VIN+</text>
+
+        <!-- − wires (hop over the + wire at x=460) -->
+        <path class="w gnd" d="M180 200 H270 V250 H480"/>
+        <path class="w gnd" d="M270 220 H460 V197 A7 7 0 0 0 460 183 V145 H415 V104"/>
+        <circle class="dot gnd" cx="270" cy="220" r="5"/>
+        <path class="w gnd" d="M650 250 H760"/>
+        <text class="wl gnd" x="300" y="214">電池− → BAT−</text>
+        <text class="wl gnd" x="300" y="268">電池− → VIN−</text>
+
+        <!-- capacitor across +5V / GND -->
+        <circle class="dot red" cx="705" cy="190" r="4.5"/>
+        <circle class="dot gnd" cx="705" cy="250" r="4.5"/>
+        <path class="sym" d="M705 190 V213 M690 213 H720 M690 227 H720 M705 227 V250"/>
+        <text class="t s" x="684" y="212" text-anchor="end">+</text>
+        <text class="t s" x="684" y="300" text-anchor="middle"></text>
+        <text class="t s" x="705" y="296" text-anchor="middle">470µF(−側をGNDへ)</text>
+      </svg>
+      </div>
+      <figcaption>電池の + と − は、それぞれ2か所(XIAO 裏面と D4184 の VIN)へ分かれます。LEDテープへは D4184 の OUT から電気が流れるので、XIAO が D2 で D4184 を OFF にすると LEDテープの電気が止まります。中央の半円は「線が交差しているだけで、つながっていない」印です。</figcaption>
+    </figure>
+  </section>
+
+  <section class="sheet">
+    <div class="step">図2 / 信号の配線</div>
+    <h2>XIAO から ボタン・D4184・LEDテープ へ</h2>
+    <figure>
+      <div class="scroll">
+      <svg viewBox="0 -24 900 390" role="img" aria-label="D0はボタンを通してGNDへ。D1は330Ωの抵抗を通してLEDテープのDINへ。D2はD4184のTRIGへ。XIAOのGNDはD4184の信号側GNDとボタンへ。">
+        <!-- XIAO top view -->
+        <rect class="comp" x="330" y="60" width="150" height="250" rx="10"/>
+        <rect class="comp" x="380" y="50" width="50" height="18" rx="4"/>
+        <text class="t s" x="405" y="84" text-anchor="middle">USB-C</text>
+        <text class="t b" x="405" y="196" text-anchor="middle">XIAO</text>
+        <text class="t s" x="405" y="214" text-anchor="middle">nRF52840</text>
+        <text class="t s" x="405" y="232" text-anchor="middle">(表面)</text>
+        <!-- left pins -->
+        <circle class="pin" cx="330" cy="90" r="5"/><text class="t m" x="342" y="94">D0</text>
+        <circle class="pin" cx="330" cy="120" r="5"/><text class="t m" x="342" y="124">D1</text>
+        <circle class="pin" cx="330" cy="150" r="5"/><text class="t m" x="342" y="154">D2</text>
+        <circle class="pin off" cx="330" cy="180" r="5"/><text class="t m off" x="342" y="184">D3</text>
+        <circle class="pin off" cx="330" cy="210" r="5"/><text class="t m off" x="342" y="214">D4</text>
+        <circle class="pin off" cx="330" cy="240" r="5"/><text class="t m off" x="342" y="244">D5</text>
+        <circle class="pin off" cx="330" cy="270" r="5"/><text class="t m off" x="342" y="274">D6</text>
+        <!-- right pins -->
+        <circle class="pin off" cx="480" cy="90" r="5"/><text class="t m off" x="468" y="94" text-anchor="end">5V</text>
+        <circle class="pin" cx="480" cy="120" r="5"/><text class="t m" x="468" y="124" text-anchor="end">GND</text>
+        <circle class="pin off" cx="480" cy="150" r="5"/><text class="t m off" x="468" y="154" text-anchor="end">3V3</text>
+        <circle class="pin off" cx="480" cy="180" r="5"/><text class="t m off" x="468" y="184" text-anchor="end">D10</text>
+        <circle class="pin off" cx="480" cy="210" r="5"/><text class="t m off" x="468" y="214" text-anchor="end">D9</text>
+        <circle class="pin off" cx="480" cy="240" r="5"/><text class="t m off" x="468" y="244" text-anchor="end">D8</text>
+        <circle class="pin off" cx="480" cy="270" r="5"/><text class="t m off" x="468" y="274" text-anchor="end">D7</text>
+
+        <!-- push button -->
+        <text class="t b" x="405" y="-6" text-anchor="middle">押しボタン</text>
+        <path class="sym" d="M380 25 V14 M430 25 V14 M372 8 H438 M405 8 V0"/>
+        <circle class="pin" cx="380" cy="25" r="4.5"/>
+        <circle class="pin" cx="430" cy="25" r="4.5"/>
+
+        <!-- D0 → button -->
+        <path class="w btn" d="M330 90 H300 V25 H380"/>
+        <text class="wl btn" x="250" y="60" text-anchor="middle">D0 → ボタン</text>
+        <!-- button → GND trunk → D4184 GND -->
+        <path class="w gnd" d="M430 25 H520 V250 H600"/>
+        <path class="w gnd" d="M480 120 H520"/>
+        <circle class="dot gnd" cx="520" cy="120" r="5"/>
+        <text class="wl gnd" x="528" y="20">ボタン → GND</text>
+        <text class="wl gnd" x="528" y="190">GND → D4184 GND</text>
+
+        <!-- D2 → TRIG -->
+        <path class="w ctrl" d="M330 150 H280 V310 H570 V280 H600"/>
+        <text class="wl ctrl" x="420" y="302" text-anchor="middle">D2 → TRIG</text>
+
+        <!-- D1 → 330Ω → DIN -->
+        <path class="w data" d="M330 120 H260 V340 H760 V230"/>
+        <path class="w data" d="M760 190 V120 H780"/>
+        <rect class="res" x="751" y="190" width="18" height="40" rx="3"/>
+        <text class="t m" x="742" y="214" text-anchor="end" style="fill:var(--w-data)">330Ω</text>
+        <text class="wl data" x="420" y="358" text-anchor="middle">D1 → 330Ω → DIN</text>
+
+        <!-- D4184 signal side -->
+        <rect class="comp" x="600" y="220" width="120" height="90" rx="6"/>
+        <circle class="pin" cx="600" cy="250" r="5"/><text class="t m" x="612" y="254">GND</text>
+        <circle class="pin" cx="600" cy="280" r="5"/><text class="t m" x="612" y="284">TRIG</text>
+        <text class="t b" x="708" y="254" text-anchor="end">D4184</text>
+        <text class="t s" x="708" y="272" text-anchor="end">信号側</text>
+
+        <!-- LED strip input end -->
+        <rect class="comp" x="780" y="60" width="110" height="120" rx="4"/>
+        <text class="t b" x="835" y="50" text-anchor="middle">LEDテープ</text>
+        <circle class="pin off" cx="780" cy="90" r="5"/><text class="t m off" x="792" y="94">+5V</text>
+        <circle class="pin" cx="780" cy="120" r="5"/><text class="t m" x="792" y="124">DIN</text>
+        <circle class="pin off" cx="780" cy="150" r="5"/><text class="t m off" x="792" y="154">GND</text>
+        <path class="sym" d="M845 166 H875 M866 160 L875 166 L866 172" style="stroke:var(--muted)"/>
+        <text class="t s" x="840" y="170" text-anchor="end">矢印の根元側</text>
+      </svg>
+      </div>
+      <figcaption>XIAO は USB-C を上にした表面の向きです。左列が D0〜D6、右列が 5V・GND・3V3・D10〜D7。灰色のピンは使いません。LEDテープの +5V と GND は図1でつないだものです。</figcaption>
+    </figure>
+  </section>
+
+  <section class="sheet">
+    <div class="step">GND の注意</div>
+    <h2>GND は共通。ただし LEDテープの GND だけは別</h2>
+    <figure>
+      <div class="scroll">
+      <svg viewBox="0 0 900 215" role="img" aria-label="電池−、XIAOのBAT−、XIAOのGND、D4184のVIN−、D4184の信号GNDはすべて共通のGNDでつなぐ。LEDテープのGNDはD4184のOUT−にだけつなぎ、共通のGNDには直接つながない。">
+        <!-- common GND bus -->
+        <path class="w gnd" d="M90 95 H570"/>
+        <path class="w gnd" d="M90 70 V95 M210 70 V95 M330 70 V95 M450 70 V95 M570 70 V95"/>
+        <circle class="pin" cx="90" cy="70" r="5"/><text class="t m" x="90" y="56" text-anchor="middle">電池 −</text>
+        <circle class="pin" cx="210" cy="70" r="5"/><text class="t m" x="210" y="56" text-anchor="middle">XIAO BAT−</text>
+        <circle class="pin" cx="330" cy="70" r="5"/><text class="t m" x="330" y="56" text-anchor="middle">XIAO GND</text>
+        <circle class="pin" cx="450" cy="70" r="5"/><text class="t m" x="450" y="56" text-anchor="middle">D4184 VIN−</text>
+        <circle class="pin" cx="570" cy="70" r="5"/><text class="t m" x="570" y="38" text-anchor="middle">D4184</text><text class="t m" x="570" y="56" text-anchor="middle">信号側GND</text>
+        <circle class="dot gnd" cx="210" cy="95" r="4.5"/><circle class="dot gnd" cx="330" cy="95" r="4.5"/><circle class="dot gnd" cx="450" cy="95" r="4.5"/>
+        <text class="wl gnd" x="330" y="122" text-anchor="middle">共通GND(5か所すべてつなぐ)</text>
+
+        <!-- LED GND only to OUT- -->
+        <path class="w gnd" d="M710 95 H840"/>
+        <circle class="pin" cx="710" cy="95" r="5"/><text class="t m" x="710" y="75" text-anchor="middle">D4184 OUT−</text>
+        <circle class="pin" cx="840" cy="95" r="5"/><text class="t m" x="840" y="75" text-anchor="middle">LEDテープ GND</text>
+        <text class="wl gnd" x="775" y="122" text-anchor="middle">OUT− にだけつなぐ</text>
+
+        <!-- forbidden direct link -->
+        <path class="stub" d="M840 100 V170 H330 V135"/>
+        <path class="sym" d="M574 159 L596 181 M596 159 L574 181" style="stroke-width:3"/>
+        <text class="t" x="585" y="205" text-anchor="middle">ここは直接つながない</text>
+      </svg>
+      </div>
+      <figcaption>左の5か所は全部同じ GND(電池のマイナス)です。D4184 の VIN− と OUT− の間には MOSFET があり、D2 が LOW になるとここが切れて LEDテープの電流が止まります。LEDテープの GND を共通の GND に直接つなぐと MOSFET を素通りしてしまい、電源OFF にしても LEDテープに電流が流れ続けます。</figcaption>
+    </figure>
+  </section>
+
+  <section class="sheet">
+    <div class="step">チェックリスト</div>
+    <h2>つないだら印をつける</h2>
+    <div class="scroll">
+    <table>
+      <thead><tr><th></th><th>から</th><th>へ</th><th>メモ</th></tr></thead>
+      <tbody id="list">
+        <tr><td class="c"><input type="checkbox" id="c1"></td><td><span class="chip" style="background:var(--w-red)"></span>電池 +</td><td>XIAO 裏面 <code>BAT+</code></td><td>図1</td></tr>
+        <tr><td class="c"><input type="checkbox" id="c2"></td><td><span class="chip" style="background:var(--w-red)"></span>電池 +</td><td>D4184 <code>VIN+</code></td><td>図1</td></tr>
+        <tr><td class="c"><input type="checkbox" id="c3"></td><td><span class="chip" style="background:var(--w-gnd)"></span>電池 −</td><td>XIAO 裏面 <code>BAT−</code></td><td>図1</td></tr>
+        <tr><td class="c"><input type="checkbox" id="c4"></td><td><span class="chip" style="background:var(--w-gnd)"></span>電池 −</td><td>D4184 <code>VIN−</code></td><td>図1</td></tr>
+        <tr><td class="c"><input type="checkbox" id="c5"></td><td><span class="chip" style="background:var(--w-red)"></span>D4184 <code>OUT+</code></td><td>LEDテープ <code>+5V</code>(赤線)</td><td>図1</td></tr>
+        <tr><td class="c"><input type="checkbox" id="c6"></td><td><span class="chip" style="background:var(--w-gnd)"></span>D4184 <code>OUT−</code></td><td>LEDテープ <code>GND</code>(白線)</td><td>図1</td></tr>
+        <tr><td class="c"><input type="checkbox" id="c7"></td><td>470µF コンデンサ</td><td>LEDテープ <code>+5V</code> と <code>GND</code> の間</td><td>短い足(−)を GND</td></tr>
+        <tr><td class="c"><input type="checkbox" id="c8"></td><td><span class="chip" style="background:var(--w-ctrl)"></span>XIAO <code>D2</code></td><td>D4184 <code>TRIG</code></td><td>図2</td></tr>
+        <tr><td class="c"><input type="checkbox" id="c9"></td><td><span class="chip" style="background:var(--w-gnd)"></span>XIAO <code>GND</code></td><td>D4184 信号側 <code>GND</code></td><td>図2</td></tr>
+        <tr><td class="c"><input type="checkbox" id="c10"></td><td><span class="chip" style="background:var(--w-data)"></span>XIAO <code>D1</code></td><td>330Ω → LEDテープ <code>DIN</code>(緑線)</td><td>図2</td></tr>
+        <tr><td class="c"><input type="checkbox" id="c11"></td><td><span class="chip" style="background:var(--w-btn)"></span>XIAO <code>D0</code></td><td>ボタンの片足</td><td>図2</td></tr>
+        <tr><td class="c"><input type="checkbox" id="c12"></td><td><span class="chip" style="background:var(--w-gnd)"></span>ボタンのもう片足</td><td>XIAO <code>GND</code></td><td>図2</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="progress" id="progress">0 / 12 完了</div>
+  </section>
+
+  <section class="sheet">
+    <div class="step">注意</div>
+    <h2>電池をつなぐ前に</h2>
+    <ul class="notes">
+      <li>配線中は電池を外しておく。電池の + と − が触れると発熱・発火の危険があります。</li>
+      <li>LEDテープの GND(白線)は D4184 の OUT− にだけつなぐ。電池の − や XIAO の GND に直接つながないこと。</li>
+      <li>D4184 の端子名は商品によって違います(<code>DC+ / DC− / LOAD+ / LOAD−</code>、TRIG が <code>PWM</code> や <code>SIG</code> など)。</li>
+      <li>XIAO 裏面の BAT+ / BAT− は、基板に印刷された文字で位置を確かめてください。</li>
+      <li>LEDテープは矢印の根元側が DIN。逆向きにつなぐと光りません。</li>
+      <li>完成したら電池をつなぎ、ボタンを 1.5 秒長押し。LEDテープが緑に1回光れば成功です。</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+(function () {
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('#list input[type="checkbox"]'));
+  var key = 'dogring-wiring-checks';
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch (e) { saved = {}; }
+  function update() {
+    var n = 0;
+    boxes.forEach(function (b) {
+      b.closest('tr').classList.toggle('done', b.checked);
+      if (b.checked) n++;
+    });
+    document.getElementById('progress').textContent = n + ' / ' + boxes.length + ' 完了';
+  }
+  boxes.forEach(function (b) {
+    if (saved[b.id]) b.checked = true;
+    b.addEventListener('change', function () {
+      saved[b.id] = b.checked;
+      try { localStorage.setItem(key, JSON.stringify(saved)); } catch (e) {}
+      update();
+    });
+  });
+  update();
+})();
+</script>
+
+</html>
