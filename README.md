@@ -1,5 +1,7 @@
 # DogRing
 
+[English](README.en.md) | 日本語
+
 XIAO で作る犬用の発光リング（首輪）です。ボタンは1つだけです。
 
 ## 構成
@@ -21,6 +23,7 @@ XIAO で作る犬用の発光リング（首輪）です。ボタンは1つだ�
 |---|---|
 | `DogRing_nRF52840/` | 本番スケッチ（XIAO nRF52840 用） |
 | `DogRing配線ガイド.html` | 図入りの配線ガイド（ブラウザで開く） |
+| `DogRing_WiringGuide_en.html` | 配線ガイド（英語版） |
 
 ## 必要なライブラリ
 - Adafruit NeoPixel
