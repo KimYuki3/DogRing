@@ -28,7 +28,7 @@
  *   D1 ── 330Ω ── LED DIN (緑線)
  *   LED +5V と GND の間に 100〜470µF のコンデンサ
  *
- *   ※ D4184 MOSFETモジュールを使う場合は ../配線図_nRF52840_D4184.md を参照
+ *   ※ D4184 MOSFETモジュールを使う場合は ../DogRing配線ガイド.html を参照
  *     (抵抗はモジュールに内蔵なので不要。TRIG→D2, 信号GND→GND)
  *   ※ MOSFETを使わない場合は USE_LED_POWER_SWITCH を 0 にし、LED GND を直接 BAT- へ
  *   ※ 電池は保護回路付きのものを推奨
